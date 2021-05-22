@@ -1,0 +1,78 @@
+การนำเข้า/ส่งออก
+#ลบโหนด
+MATCH (n)
+DETACH DELETE n
+
+# นำเข้าข้อมูล จากไฟล์ CSV
+LOAD CSV WITH HEADERS FROM "file:///riceimport.csv" AS fileimport
+
+# MERGE Data 
+MERGE (ss:ssource {ssource: fileimport.source_code}) 
+MERGE (sc:scountry {scountry: fileimport.country_code})
+
+#MERGE Relation
+MERGE (ss)-[im:import]->(sc)
+
+return ss,im,sc
+
+#Select in-degree
+match (ss)-[im:import]->(sc)
+return sc,count(im)
+order by count(im) desc
+
+#นับโหนด
+MATCH (S:ssource) return count(S:ssource)
+MATCH (C:scountry) return count(C.scountry)
+
+#ดูโหนดที่ทรงอิธิพลที่สุดจาก ตารางที่นับไว้
+MATCH (T:scountry),(S:ssource)
+where T.scountry = 'Thailand'
+return S,T
+
+#ประเทศร่วมกัน
+MATCH (T:scountry),(S:ssource)
+where T.scountry = 'Singapore' or T.scountry = 'Thailand'
+return S,T
+
+
+#centerlize
+:param limit => ( 42);
+:param config => ({
+  nodeProjection: '*',
+  relationshipProjection: {
+    relType: {
+      type: '*',
+      orientation: 'REVERSE',
+      properties: {}
+    }
+  },
+  relationshipWeightProperty: null
+});
+:param communityNodeLimit => ( 10);
+
+CALL gds.alpha.degree.stream($config) YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS node, score
+RETURN node, score
+ORDER BY score DESC
+LIMIT toInteger($limit);
+
+#closeness
+:param limit => ( 42);
+:param config => ({
+  nodeProjection: '*',
+  relationshipProjection: {
+    relType: {
+      type: '*',
+      orientation: 'NATURAL',
+      properties: {}
+    }
+  }
+});
+:param communityNodeLimit => ( 10);
+
+CALL gds.alpha.closeness.stream($config) YIELD nodeId, centrality AS score
+WITH gds.util.asNode(nodeId) AS node, score
+RETURN node, score
+ORDER BY score DESC
+LIMIT toInteger($limit);
+
