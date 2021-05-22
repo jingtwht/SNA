@@ -1,9 +1,9 @@
-การนำเข้า/ส่งออก
-#ลบโหนด
+Code Import Export
+#Delete all Node and relationship
 MATCH (n)
 DETACH DELETE n
 
-# นำเข้าข้อมูล จากไฟล์ CSV
+# Load File CSV
 LOAD CSV WITH HEADERS FROM "file:///riceimport.csv" AS fileimport
 
 # MERGE Data 
@@ -20,16 +20,16 @@ match (ss)-[im:import]->(sc)
 return sc,count(im)
 order by count(im) desc
 
-#นับโหนด
+# Count each node
 MATCH (S:ssource) return count(S:ssource)
 MATCH (C:scountry) return count(C.scountry)
 
-#ดูโหนดที่ทรงอิธิพลที่สุดจาก ตารางที่นับไว้
+# Select top node
 MATCH (T:scountry),(S:ssource)
 where T.scountry = 'Thailand'
 return S,T
 
-#ประเทศร่วมกัน
+#ยปSelect top node
 MATCH (T:scountry),(S:ssource)
 where T.scountry = 'Singapore' or T.scountry = 'Thailand'
 return S,T
